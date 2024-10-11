@@ -1,0 +1,3 @@
+name: ttfpi-agda
+include: src
+depend: standard-library-2.1
