@@ -4,7 +4,7 @@ open import Data.Product.Base using (_×_; _,_; ∃; ∃-syntax)
 open import Function.Bundles using (_⇔_; Equivalence)
 open import Relation.Nullary using (Dec; yes; no; ¬?)
 open import Relation.Binary.Definitions using (DecidableEquality)
-open import Relation.Binary.PropositionalEquality using (_≡_; refl; cong; cong₂)
+open import Relation.Binary.PropositionalEquality using (_≡_; _≢_; refl; cong; cong₂)
 
 open import Data.List.Membership.Propositional using (_∈_)
 
@@ -34,19 +34,34 @@ FV (` x) = [ x ]
 FV (ƛ x ∶ A ⇒ M) = filter (λ y → ¬? (x s≟ y)) (FV M)
 FV (M · N) = FV M ++ FV N
 
-Ctx : Set
-Ctx = List (Name × Type)
+infixl 5 _,_∶_
+
+data Context : Set where
+  ∅     : Context
+  _,_∶_ : Context → Name → Type → Context
+
+infix 4 _∋_∶_
+
+data _∋_∶_ : Context → Name → Type → Set where
+  Z : ∀ {Γ x A}
+    -------------------
+    → Γ , x ∶ A ∋ x ∶ A
+
+  S : ∀ {Γ x y A B}
+    → Γ ∋ x ∶ A
+    -------------------
+    → Γ , y ∶ B ∋ x ∶ A
 
 infix 4 _⊢_∶_
 
-data _⊢_∶_ : Ctx → Term → Type → Set where
+data _⊢_∶_ : Context → Term → Type → Set where
   ⊢`_ : ∀ {Γ x A}
-    → (x , A) ∈ Γ
+    → Γ ∋ x ∶ A
     -------------
     → Γ ⊢ ` x ∶ A
 
   ⊢ƛ_ : ∀ {Γ x A B M}
-    → ((x , A) ∷ Γ) ⊢ M ∶ B
+    → Γ , x ∶ A ⊢ M ∶ B
     -----------------------------
     → Γ ⊢ (ƛ x ∶ A ⇒ M) ∶ (A ⇒ B)
 
@@ -60,12 +75,12 @@ data _⊢_∶_ : Ctx → Term → Type → Set where
 infix 4 ⊢_∶_
 
 ⊢_∶_ : Term → Type → Set
-⊢ M ∶ A = [] ⊢ M ∶ A
+⊢ M ∶ A = ∅ ⊢ M ∶ A
 
 Typeable : Term → Set
 Typeable M = ∃[ A ] ⊢ M ∶ A
 
-`-gen : ∀ {Γ x A} → (Γ ⊢ ` x ∶ A) ⇔ ((x , A) ∈ Γ)
+`-gen : ∀ {Γ x A} → (Γ ⊢ ` x ∶ A) ⇔ (Γ ∋ x ∶ A)
 `-gen .to (⊢` x) = x
 `-gen .from x = ⊢` x
 `-gen .to-cong = cong (`-gen .to)
@@ -77,7 +92,7 @@ Typeable M = ∃[ A ] ⊢ M ∶ A
 ·-gen .to-cong = cong (·-gen .to)
 ·-gen .from-cong = cong (·-gen .from)
 
-ƛ-gen : ∀ {Γ x A C M} → (Γ ⊢ (ƛ x ∶ A ⇒ M) ∶ C) ⇔ (∃[ B ] ((((x , A) ∷ Γ) ⊢ M ∶ B) × (C ≡ (A ⇒ B))))
+ƛ-gen : ∀ {Γ x A C M} → (Γ ⊢ (ƛ x ∶ A ⇒ M) ∶ C) ⇔ (∃[ B ] (((Γ , x ∶ A) ⊢ M ∶ B) × (C ≡ (A ⇒ B))))
 ƛ-gen .to (⊢ƛ M) = _ , M , refl
 ƛ-gen .from (_ , M , refl) = ⊢ƛ M
 ƛ-gen .to-cong = cong (ƛ-gen .to)
