@@ -13,9 +13,16 @@ open Equivalence using (from; to; to-cong; from-cong)
 Name : Set
 Name = String
 
+infix  9 ``_
+infixr 8 _⇒_
+
 data Type : Set where
   ``_ : Name → Type
   _⇒_ : Type → Type → Type
+
+infixr 5 ƛ_∶_⇒_
+infixl 7 _·_
+infix  9 `_
 
 data Term : Set where
   `_     : Name → Term
@@ -29,6 +36,8 @@ FV (M · N) = FV M ++ FV N
 
 Ctx : Set
 Ctx = List (Name × Type)
+
+infix 4 _⊢_∶_
 
 data _⊢_∶_ : Ctx → Term → Type → Set where
   ⊢`_ : ∀ {Γ x A}
@@ -47,6 +56,8 @@ data _⊢_∶_ : Ctx → Term → Type → Set where
     → Γ ⊢ N ∶ A
     -----------------
     → Γ ⊢ (M · N) ∶ B
+
+infix 4 ⊢_∶_
 
 ⊢_∶_ : Term → Type → Set
 ⊢ M ∶ A = [] ⊢ M ∶ A
