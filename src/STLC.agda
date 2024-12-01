@@ -1,12 +1,10 @@
 open import Data.String using (String) renaming (_≟_ to _s≟_)
-open import Data.List using (List; _∷_; []; [_]; _++_; filter)
+open import Data.List using (List; [_]; _++_; filter)
 open import Data.Product.Base using (_×_; _,_; ∃; ∃-syntax)
 open import Function.Bundles using (_⇔_; Equivalence)
-open import Relation.Nullary using (Dec; yes; no; ¬?)
+open import Relation.Nullary using (yes; no; ¬?; contradiction)
 open import Relation.Binary.Definitions using (DecidableEquality)
-open import Relation.Binary.PropositionalEquality using (_≡_; _≢_; refl; cong; cong₂)
-
-open import Data.List.Membership.Propositional using (_∈_)
+open import Relation.Binary.PropositionalEquality using (_≡_; _≢_; refl; cong)
 
 open Equivalence using (from; to; to-cong; from-cong)
 
@@ -48,6 +46,8 @@ data _∋_∶_ : Context → Name → Type → Set where
     → Γ , x ∶ A ∋ x ∶ A
 
   S : ∀ {Γ x y A B}
+    → x ≢ y
+    -----------
     → Γ ∋ x ∶ A
     -------------------
     → Γ , y ∶ B ∋ x ∶ A
@@ -97,3 +97,20 @@ Typeable M = ∃[ A ] ⊢ M ∶ A
 ƛ-gen .from (_ , M , refl) = ⊢ƛ M
 ƛ-gen .to-cong = cong (ƛ-gen .to)
 ƛ-gen .from-cong = cong (ƛ-gen .from)
+
+_≟_ : DecidableEquality Type
+(`` x) ≟ (`` y) with x s≟ y
+... | yes refl = yes refl
+... | no n     = no λ{refl → n refl}
+(`` x) ≟ (A ⇒ B) = no λ()
+(A ⇒ B) ≟ (`` x) = no λ()
+(A ⇒ B) ≟ (A’ ⇒ B’) with A ≟ A’ | B ≟ B’
+... | no na    | _        = no λ{refl → na refl}
+... | yes _    | no nb    = no λ{refl → nb refl}
+... | yes refl | yes refl = yes refl
+
+uniq-∋ : ∀ {Γ x A B} → Γ ∋ x ∶ A → Γ ∋ x ∶ B → A ≡ B
+uniq-∋ Z Z             = refl
+uniq-∋ Z (S nx _)      = contradiction refl nx
+uniq-∋ (S nx _) Z      = contradiction refl nx
+uniq-∋ (S _ x) (S _ y) = uniq-∋ x y
