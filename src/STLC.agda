@@ -2,7 +2,8 @@ open import Data.String using (String) renaming (_≟_ to _s≟_)
 open import Data.List using (List; [_]; _++_; filter)
 open import Data.Product.Base using (_×_; _,_; ∃; ∃-syntax)
 open import Function.Bundles using (_⇔_; Equivalence)
-open import Relation.Nullary using (yes; no; ¬?; contradiction)
+open import Relation.Nullary using (Dec; yes; no; ¬?; contradiction)
+open import Relation.Nullary.Negation.Core using (¬_)
 open import Relation.Binary.Definitions using (DecidableEquality)
 open import Relation.Binary.PropositionalEquality using (_≡_; _≢_; refl; cong)
 
@@ -114,3 +115,18 @@ uniq-∋ Z Z             = refl
 uniq-∋ Z (S nx _)      = contradiction refl nx
 uniq-∋ (S nx _) Z      = contradiction refl nx
 uniq-∋ (S _ x) (S _ y) = uniq-∋ x y
+
+ext-∋ : ∀ {Γ x y B}
+  → x ≢ y
+  → ¬ (∃[ A ] Γ ∋ x ∶ A)
+  → ¬ (∃[ A ] Γ , y ∶ B ∋ x ∶ A)
+ext-∋ x≢y _ (_ , Z)      = contradiction refl x≢y
+ext-∋ _  ¬∃ (A , S _ ∋x) = ¬∃ (A , ∋x)
+
+lookup : (Γ : Context) → (x : Name) → Dec (∃[ A ] Γ ∋ x ∶ A)
+lookup ∅ x = no λ()
+lookup (Γ , y ∶ B) x with x s≟ y
+... | yes refl = yes (B , Z)
+... | no nx with lookup Γ x
+...   | yes (A , x) = yes (A , S nx x)
+...   | no nex      = no (ext-∋ nx nex)
