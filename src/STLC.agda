@@ -1,3 +1,5 @@
+{-# OPTIONS --allow-unsolved-metas #-}
+
 module STLC where
 
 open import Data.String using (String) renaming (_≟_ to _s≟_)
