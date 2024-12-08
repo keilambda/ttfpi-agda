@@ -163,11 +163,11 @@ typeCheck Γ (ƛ x ∶ A’ ⇒ M) (A ⇒ B) with A’ ≟ A
 typeCheck Γ (` x · N) B with lookup Γ x
 ... | no ¬∃           = no λ { (⊢ MAB · _) → ¬∃ (_ , `-gen .to MAB) }
 ... | yes (`` y , MA) = no λ { (⊢ MAB · NA) → contradiction (uniq-∋ (`-gen .to MAB) MA) ⇒≢`` }
-... | yes (A ⇒ B’ , MAB’) with typeCheck Γ N A
-...   | no ¬NA = no λ { (⊢ MA’B · NA’) → ¬NA (case (⇒-inj₁ (uniq-∋ (`-gen .to MA’B) MAB’)) of λ { refl → NA’ }) }
-...   | yes NA with B ≟ B’
-...     | no B≢B’  = no λ { (⊢ MAB · _) → B≢B’ (⇒-inj₂ (uniq-∋ (`-gen .to MAB) MAB’)) }
-...     | yes refl = yes (⊢ ⊢` MAB’ · NA)
+... | yes (A ⇒ B’ , MAB’) with B ≟ B’
+...   | no B≢B’ = no λ { (⊢ MAB · _) → B≢B’ (⇒-inj₂ (uniq-∋ (`-gen .to MAB) MAB’)) }
+...   | yes refl with typeCheck Γ N A
+...     | no ¬NA = no λ { (⊢ MA’B · NA’) → ¬NA (case (⇒-inj₁ (uniq-∋ (`-gen .to MA’B) MAB’)) of λ { refl → NA’ }) }
+...     | yes NA = yes (⊢ ⊢` MAB’ · NA)
 typeCheck Γ ((ƛ x ∶ A ⇒ M) · N) B with typeCheck (Γ , x ∶ A) M B
 ... | no ¬MB = no λ { (⊢ MA’B · _) → case ƛ-gen .to MA’B of λ { (_ , MB , refl) → ¬MB MB } }
 ... | yes MB with typeCheck Γ N A
