@@ -90,6 +90,15 @@ data _⊢_∶_ : Context → Term → Type → Set where
 Typeable : Term → Set
 Typeable M = ∃[ Γ ] ∃[ A ] Γ ⊢ M ∶ A
 
+TypeFinding : Context → Term → Set
+TypeFinding Γ M = ∃[ A ] Γ ⊢ M ∶ A
+
+TermFinding : Context → Type → Set
+TermFinding Γ A = ∃[ M ] Γ ⊢ M ∶ A
+
+TypeChecking : Context → Term → Type → Set
+TypeChecking Γ M A = Γ ⊢ M ∶ A
+
 `-gen : ∀ {Γ x A} → (Γ ⊢ ` x ∶ A) ⇔ (Γ ∋ x ∶ A)
 `-gen .to (⊢` x) = x
 `-gen .from x = ⊢` x
