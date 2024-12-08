@@ -87,13 +87,8 @@ data _⊢_∶_ : Context → Term → Type → Set where
     -----------------
     → Γ ⊢ (M · N) ∶ B
 
-infix 4 ⊢_∶_
-
-⊢_∶_ : Term → Type → Set
-⊢ M ∶ A = ∅ ⊢ M ∶ A
-
 Typeable : Term → Set
-Typeable M = ∃[ A ] ⊢ M ∶ A
+Typeable M = ∃[ Γ ] ∃[ A ] Γ ⊢ M ∶ A
 
 `-gen : ∀ {Γ x A} → (Γ ⊢ ` x ∶ A) ⇔ (Γ ∋ x ∶ A)
 `-gen .to (⊢` x) = x
