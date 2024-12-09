@@ -10,7 +10,7 @@ open import Function.Bundles using (_⇔_; Equivalence)
 open import Relation.Nullary using (Dec; yes; no; ¬?; contradiction)
 open import Relation.Nullary.Negation.Core using (¬_)
 open import Relation.Binary.Definitions using (DecidableEquality)
-open import Relation.Binary.PropositionalEquality using (_≡_; _≢_; refl; cong; ≢-sym)
+open import Relation.Binary.PropositionalEquality using (_≡_; _≢_; refl; trans; cong; ≢-sym)
 
 open Equivalence using (from; to; to-cong; from-cong)
 
@@ -156,6 +156,22 @@ lookup (Γ , y ∶ B) x with x s≟ y
 ... | no nx with lookup Γ x
 ...   | yes (A , x) = yes (A , there nx x)
 ...   | no nex      = no (ext-∋ nx nex)
+
+type-infer : ∀ Γ M → Dec (∃[ A ] Γ ⊢ M ∶ A)
+type-infer Γ (` x) with lookup Γ x
+... | no ¬∃        = no λ { (A , (⊢` ∋x)) → ¬∃ (A , ∋x) }
+... | yes (A , ∋x) = yes (A , (⊢` ∋x))
+type-infer Γ (ƛ x ∶ A ⇒ M) with type-infer (Γ , x ∶ A) M
+... | no ¬MB       = no λ { (_ ⇒ B , (⊢ƛ MB)) → ¬MB (B , MB) }
+... | yes (B , MB) = yes (A ⇒ B , (⊢ƛ MB))
+type-infer Γ (M · N) with type-infer Γ M | type-infer Γ N
+... | no _    | no ¬NA  = no λ { (_ , ⊢ _ · NA) → ¬NA (_ , NA) }
+... | yes _   | no ¬NA  = no λ { (_ , ⊢ _ · NA) → ¬NA (_ , NA) }
+... | no ¬MAB | yes _   = no λ { (_ , ⊢ MAB · _) → ¬MAB (_ , MAB) }
+... | yes (`` _ ,  MA)  | yes _ = no λ { (_ , (⊢ MAB · _)) → contradiction (uniq MA MAB) ``≢⇒ }
+... | yes (A ⇒ B , MAB) | yes (A' , NA') with A ≟ A'
+...   | no A≢A' = no λ { (_ , (⊢ MA''B · NA'')) → A≢A' (trans (⇒-inj₁ (uniq MAB MA''B)) (uniq NA'' NA')) }
+...   | yes refl = yes (B , ⊢ MAB · NA')
 
 type-check : ∀ Γ M A → Dec (Γ ⊢ M ∶ A)
 -- var
