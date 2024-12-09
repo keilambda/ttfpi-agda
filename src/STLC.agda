@@ -1,5 +1,3 @@
-{-# OPTIONS --allow-unsolved-metas #-}
-
 module STLC where
 
 open import Data.String using (String) renaming (_≟_ to _s≟_)
@@ -119,6 +117,8 @@ TypeChecking Γ M A = Γ ⊢ M ∶ A
 ƛ-gen .from (_ , M , refl) = ⊢ƛ M
 ƛ-gen .to-cong = cong (ƛ-gen .to)
 ƛ-gen .from-cong = cong (ƛ-gen .from)
+
+infix 4 _≟_
 
 _≟_ : DecidableEquality Type
 (`` x) ≟ (`` y) with x s≟ y
