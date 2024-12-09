@@ -24,6 +24,12 @@ data Type : Set where
   ``_ : Name → Type
   _⇒_ : Type → Type → Type
 
+⇒-cong₁ : ∀ {A B C} → A ≡ B → A ⇒ C ≡ B ⇒ C
+⇒-cong₁ refl = refl
+
+⇒-cong₂ : ∀ {A B C} → A ≡ B → C ⇒ A ≡ C ⇒ B
+⇒-cong₂ refl = refl
+
 ⇒-inj₁ : ∀ {A B C D} → A ⇒ B ≡ C ⇒ D → A ≡ C
 ⇒-inj₁ refl = refl
 
@@ -130,6 +136,11 @@ uniq-∋ here here               = refl
 uniq-∋ here (there nx _)       = contradiction refl nx
 uniq-∋ (there nx _) here       = contradiction refl nx
 uniq-∋ (there _ x) (there _ y) = uniq-∋ x y
+
+uniq : ∀ {Γ M A B} → Γ ⊢ M ∶ A → Γ ⊢ M ∶ B → A ≡ B
+uniq (⊢` ∋x) (⊢` ∋y)       = uniq-∋ ∋x ∋y
+uniq (⊢ƛ MA) (⊢ƛ MB)       = ⇒-cong₂ (uniq MA MB)
+uniq (⊢ MA · _) (⊢ MB · _) = ⇒-inj₂ (uniq MA MB)
 
 ext-∋ : ∀ {Γ x y B}
   → x ≢ y
