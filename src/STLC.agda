@@ -56,11 +56,8 @@ data Context : Set where
 infix 4 _∋_∶_
 
 data _∋_∶_ : Context → Name → Type → Set where
-  Z : ∀ {Γ x A}
-    -------------------
-    → Γ , x ∶ A ∋ x ∶ A
-
-  S : ∀ {Γ x y A B}
+  here  : ∀ {Γ x A} → Γ , x ∶ A ∋ x ∶ A
+  there : ∀ {Γ x y A B}
     → x ≢ y
     -----------
     → Γ ∋ x ∶ A
@@ -129,52 +126,52 @@ _≟_ : DecidableEquality Type
 ... | yes refl | yes refl = yes refl
 
 uniq-∋ : ∀ {Γ x A B} → Γ ∋ x ∶ A → Γ ∋ x ∶ B → A ≡ B
-uniq-∋ Z Z             = refl
-uniq-∋ Z (S nx _)      = contradiction refl nx
-uniq-∋ (S nx _) Z      = contradiction refl nx
-uniq-∋ (S _ x) (S _ y) = uniq-∋ x y
+uniq-∋ here here               = refl
+uniq-∋ here (there nx _)       = contradiction refl nx
+uniq-∋ (there nx _) here       = contradiction refl nx
+uniq-∋ (there _ x) (there _ y) = uniq-∋ x y
 
 ext-∋ : ∀ {Γ x y B}
   → x ≢ y
   → ¬ (∃[ A ] Γ ∋ x ∶ A)
   → ¬ (∃[ A ] Γ , y ∶ B ∋ x ∶ A)
-ext-∋ x≢y _ (_ , Z)      = contradiction refl x≢y
-ext-∋ _  ¬∃ (A , S _ ∋x) = ¬∃ (A , ∋x)
+ext-∋ x≢y _ (_ , here)       = contradiction refl x≢y
+ext-∋ _  ¬∃ (A , there _ ∋x) = ¬∃ (A , ∋x)
 
 lookup : ∀ Γ x → Dec (∃[ A ] Γ ∋ x ∶ A)
 lookup ∅ x = no λ()
 lookup (Γ , y ∶ B) x with x s≟ y
-... | yes refl = yes (B , Z)
+... | yes refl = yes (B , here)
 ... | no nx with lookup Γ x
-...   | yes (A , x) = yes (A , S nx x)
+...   | yes (A , x) = yes (A , there nx x)
 ...   | no nex      = no (ext-∋ nx nex)
 
-typeCheck : ∀ Γ M A → Dec (Γ ⊢ M ∶ A)
+type-check : ∀ Γ M A → Dec (Γ ⊢ M ∶ A)
 -- var
-typeCheck Γ (` x) A with lookup Γ x
+type-check Γ (` x) A with lookup Γ x
 ... | no ¬∃ = no λ xA → ¬∃ (A , `-gen .to xA)
 ... | yes (A’ , ∋x) with A’ ≟ A
 ...   | yes refl = yes (⊢` ∋x)
 ...   | no A’≢A  = no λ xA → A’≢A (uniq-∋ ∋x (`-gen .to xA))
 -- abs
-typeCheck Γ (ƛ x ∶ A’ ⇒ M) (`` B) = no λ()
-typeCheck Γ (ƛ x ∶ A’ ⇒ M) (A ⇒ B) with A’ ≟ A
+type-check Γ (ƛ x ∶ A’ ⇒ M) (`` B) = no λ()
+type-check Γ (ƛ x ∶ A’ ⇒ M) (A ⇒ B) with A’ ≟ A
 ... | no  A’≢A = no λ{ (⊢ƛ _) → A’≢A refl }
-... | yes refl with typeCheck (Γ , x ∶ A) M B
+... | yes refl with type-check (Γ , x ∶ A) M B
 ...   | no ¬MB = no λ { (⊢ƛ MB) → ¬MB MB }
 ...   | yes MB = yes (⊢ƛ MB)
 -- app
-typeCheck Γ (` x · N) B with lookup Γ x
+type-check Γ (` x · N) B with lookup Γ x
 ... | no ¬∃           = no λ { (⊢ MAB · _) → ¬∃ (_ , `-gen .to MAB) }
 ... | yes (`` y , MA) = no λ { (⊢ MAB · NA) → contradiction (uniq-∋ (`-gen .to MAB) MA) ⇒≢`` }
 ... | yes (A ⇒ B’ , MAB’) with B ≟ B’
 ...   | no B≢B’ = no λ { (⊢ MAB · _) → B≢B’ (⇒-inj₂ (uniq-∋ (`-gen .to MAB) MAB’)) }
-...   | yes refl with typeCheck Γ N A
+...   | yes refl with type-check Γ N A
 ...     | no ¬NA = no λ { (⊢ MA’B · NA’) → ¬NA (case (⇒-inj₁ (uniq-∋ (`-gen .to MA’B) MAB’)) of λ { refl → NA’ }) }
 ...     | yes NA = yes (⊢ ⊢` MAB’ · NA)
-typeCheck Γ ((ƛ x ∶ A ⇒ M) · N) B with typeCheck (Γ , x ∶ A) M B
+type-check Γ ((ƛ x ∶ A ⇒ M) · N) B with type-check (Γ , x ∶ A) M B
 ... | no ¬MB = no λ { (⊢ MA’B · _) → case ƛ-gen .to MA’B of λ { (_ , MB , refl) → ¬MB MB } }
-... | yes MB with typeCheck Γ N A
+... | yes MB with type-check Γ N A
 ...   | no ¬NA = no λ { (⊢ MA’B · NA) → ¬NA (case ⇒-inj₁ (proj₂ (proj₂ (ƛ-gen .to MA’B))) of λ { refl → NA }) }
 ...   | yes NA = yes (⊢ ⊢ƛ MB · NA)
-typeCheck Γ (L · M · N) B = {!   !}
+type-check Γ (L · M · N) B = {!   !}
