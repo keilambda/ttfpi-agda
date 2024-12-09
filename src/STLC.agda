@@ -188,17 +188,11 @@ type-check Γ (ƛ x ∶ A’ ⇒ M) (A ⇒ B) with A’ ≟ A
 ...   | no ¬MB = no λ { (⊢ƛ MB) → ¬MB MB }
 ...   | yes MB = yes (⊢ƛ MB)
 -- app
-type-check Γ (` x · N) B with lookup Γ x
-... | no ¬∃           = no λ { (⊢ MAB · _) → ¬∃ (_ , `-gen .to MAB) }
-... | yes (`` y , MA) = no λ { (⊢ MAB · NA) → contradiction (uniq-∋ (`-gen .to MAB) MA) (≢-sym ``≢⇒) }
-... | yes (A ⇒ B’ , MAB’) with B ≟ B’
-...   | no B≢B’ = no λ { (⊢ MAB · _) → B≢B’ (⇒-inj₂ (uniq-∋ (`-gen .to MAB) MAB’)) }
+type-check Γ (M · N) B with type-infer Γ M
+... | no ¬MAB         = no λ { (⊢ MAB · _) → ¬MAB (_ , MAB) }
+... | yes (`` _ , MA) = no λ { (⊢ MAB · _) → contradiction (uniq MA MAB) ``≢⇒ }
+... | yes (A ⇒ B' , MAB') with B' ≟ B
+...   | no B'≢B = no λ { (⊢ MA'B · _) → B'≢B (⇒-inj₂ (uniq MAB' MA'B)) }
 ...   | yes refl with type-check Γ N A
-...     | no ¬NA = no λ { (⊢ MA’B · NA’) → ¬NA (case (⇒-inj₁ (uniq-∋ (`-gen .to MA’B) MAB’)) of λ { refl → NA’ }) }
-...     | yes NA = yes (⊢ ⊢` MAB’ · NA)
-type-check Γ ((ƛ x ∶ A ⇒ M) · N) B with type-check (Γ , x ∶ A) M B
-... | no ¬MB = no λ { (⊢ MA’B · _) → case ƛ-gen .to MA’B of λ { (_ , MB , refl) → ¬MB MB } }
-... | yes MB with type-check Γ N A
-...   | no ¬NA = no λ { (⊢ MA’B · NA) → ¬NA (case ⇒-inj₁ (proj₂ (proj₂ (ƛ-gen .to MA’B))) of λ { refl → NA }) }
-...   | yes NA = yes (⊢ ⊢ƛ MB · NA)
-type-check Γ (L · M · N) B = {!   !}
+...     | no ¬NA = no λ { (⊢ MA'B · NA') → case ⇒-inj₁ (uniq MAB' MA'B) of λ { refl → ¬NA NA' }}
+...     | yes NA = yes (⊢ MAB' · NA)
