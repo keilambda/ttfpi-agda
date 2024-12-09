@@ -10,7 +10,7 @@ open import Function.Bundles using (_⇔_; Equivalence)
 open import Relation.Nullary using (Dec; yes; no; ¬?; contradiction)
 open import Relation.Nullary.Negation.Core using (¬_)
 open import Relation.Binary.Definitions using (DecidableEquality)
-open import Relation.Binary.PropositionalEquality using (_≡_; _≢_; refl; cong)
+open import Relation.Binary.PropositionalEquality using (_≡_; _≢_; refl; cong; ≢-sym)
 
 open Equivalence using (from; to; to-cong; from-cong)
 
@@ -36,8 +36,8 @@ data Type : Set where
 ⇒-inj₂ : ∀ {A B C D} → A ⇒ B ≡ C ⇒ D → B ≡ D
 ⇒-inj₂ refl = refl
 
-⇒≢`` : ∀ {A B x} → A ⇒ B ≢ `` x
-⇒≢`` ()
+``≢⇒ : ∀ {A B x} → `` x ≢ A ⇒ B
+``≢⇒ ()
 
 infixr 5 ƛ_∶_⇒_
 infixl 7 _·_
@@ -174,7 +174,7 @@ type-check Γ (ƛ x ∶ A’ ⇒ M) (A ⇒ B) with A’ ≟ A
 -- app
 type-check Γ (` x · N) B with lookup Γ x
 ... | no ¬∃           = no λ { (⊢ MAB · _) → ¬∃ (_ , `-gen .to MAB) }
-... | yes (`` y , MA) = no λ { (⊢ MAB · NA) → contradiction (uniq-∋ (`-gen .to MAB) MA) ⇒≢`` }
+... | yes (`` y , MA) = no λ { (⊢ MAB · NA) → contradiction (uniq-∋ (`-gen .to MAB) MA) (≢-sym ``≢⇒) }
 ... | yes (A ⇒ B’ , MAB’) with B ≟ B’
 ...   | no B≢B’ = no λ { (⊢ MAB · _) → B≢B’ (⇒-inj₂ (uniq-∋ (`-gen .to MAB) MAB’)) }
 ...   | yes refl with type-check Γ N A
