@@ -1,7 +1,6 @@
 module Untyped where
 
 open import Function.Bundles using (_⇔_; Equivalence)
-open import Data.Nat using (ℕ; _+_; _<_; s≤s; z≤n)
 open import Data.List using (List; _∷_; []; [_]; _++_)
 open import Data.List.Relation.Unary.Any using (here; there)
 open import Data.String using (String)
@@ -30,16 +29,6 @@ private
   variable
     L M N P Q R : Λ
     x y z u v w : Name
-
-∣_∣ : Λ → ℕ
-∣ var x ∣ = 1
-∣ M · N ∣ = 1 + ∣ M ∣ + ∣ N ∣
-∣ ƛ x ⇒ M ∣ = 1 + ∣ M ∣
-
-z<∣M∣ : 0 < ∣ M ∣
-z<∣M∣ {var x} = s≤s z≤n
-z<∣M∣ {M · N} = s≤s z≤n
-z<∣M∣ {ƛ x ⇒ M} = s≤s z≤n
 
 -- NOTE: Ideally should be implemented using a Multiset.
 -- Alas, Agda does not support Quotient types out of the box and I am not smart enough for Cubical Agda yet.
