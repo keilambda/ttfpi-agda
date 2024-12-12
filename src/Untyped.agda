@@ -1,17 +1,21 @@
 module Untyped where
 
 open import Function.Bundles using (_⇔_; Equivalence)
+open import Data.Bool using (if_then_else_)
+open import Data.Empty using (⊥)
 open import Data.List using (List; _∷_; []; [_]; _++_; filter)
 open import Data.List.Relation.Unary.Any using (here; there)
 open import Data.String using (String; _≟_)
-open import Data.Sum using (_⊎_) renaming (inj₁ to inl; inj₂ to inr)
+open import Data.Sum using (_⊎_; [_,_]) renaming (inj₁ to inl; inj₂ to inr)
 open import Data.Product using (_×_)
 open import Level using (zero)
-open import Relation.Nullary using (¬?)
+open import Relation.Nullary using (Dec; yes; no; ¬?; toSum; _⊎-dec_; ⌊_⌋)
+open import Relation.Nullary.Negation.Core using (¬_)
 open import Relation.Binary.Core using (Rel)
 open import Relation.Binary.PropositionalEquality using (_≡_; _≢_; refl; cong)
 
-open import Data.List.Membership.Propositional using (_∈_)
+open import Data.List.Membership.Propositional using (_∈_; _∉_)
+open import Data.List.Membership.DecPropositional (_≟_) using (_∈?_)
 
 open Equivalence using (from; to; to-cong; from-cong)
 
@@ -79,3 +83,45 @@ FV (M · N) = FV M ++ FV N
 -- 1.4.3: Closed λ-term; combinator; Λ⁰
 Closed : Term → Set
 Closed M = FV M ≡ []
+
+-- 1.5.1: Renaming
+_binding-∈_ : Name → Term → Set
+x binding-∈ var _   = ⊥
+x binding-∈ M · N   = x binding-∈ M ⊎ x binding-∈ N
+x binding-∈ ƛ y ⇒ M = x ≡ y ⊎ x binding-∈ M
+
+infix 4 _binding-∈_
+
+_binding-∉_ : Name → Term → Set
+x binding-∉ M = ¬ x binding-∈ M
+
+infix 4 _binding-∉_
+
+_binding-∈?_ : (x : Name) → (M : Term) → Dec (x binding-∈ M)
+x binding-∈? var _ = no λ()
+x binding-∈? (M · N) with x binding-∈? M | x binding-∈? N
+... | yes xM | _      = yes (inl xM)
+... | _      | yes xN = yes (inr xN)
+... | no ¬xM | no ¬xN = no λ { (inl xM) → ¬xM xM ; (inr xN) → ¬xN xN }
+x binding-∈? (ƛ y ⇒ M) with x ≟ y
+... | yes refl = yes (inl refl)
+... | no x≢y with x binding-∈? M
+...   | yes xM = yes (inr xM)
+...   | no ¬xM = no λ { (inl x≡y) → x≢y x≡y ; (inr xM) → ¬xM xM }
+
+infix 4 _binding-∈?_
+
+_[_↦_] : Term → Name → Name → Term
+t@(var z) [ x ↦ y ] with x ≟ z
+... | yes _ = var y
+... | no  _ = t
+(M · N) [ x ↦ y ] = (M [ x ↦ y ]) · (N [ x ↦ y ])
+t@(ƛ z ⇒ M) [ x ↦ y ] =
+  [ (λ _ → t)
+  , (λ _ → if ⌊ z ≟ x ⌋ then ƛ y ⇒ (M [ x ↦ y ]) else ƛ z ⇒ (M [ x ↦ y ]))
+  ] (toSum (y binding-∈? M ⊎-dec y ∈? FV M))
+
+infix 8 _[_↦_]
+
+data Renaming : Rel Term zero where
+  rename : ∀ {x y M} → y ∉ FV M → y binding-∉ M → Renaming (ƛ x ⇒ M) (ƛ y ⇒ M [ x ↦ y ])
