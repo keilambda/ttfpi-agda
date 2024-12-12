@@ -18,27 +18,28 @@ Name : Set
 Name = String
 
 -- 1.3.2: The set of all λ-terms
-data Λ : Set where
-  var : Name → Λ
-  _·_ : Λ → Λ → Λ
-  ƛ_⇒_ : Name → Λ → Λ
+data Term : Set where
+  var  : Name → Term
+  _·_  : Term → Term → Term
+  ƛ_⇒_ : Name → Term → Term
 
-infixl 100 _·_
+infixl 7 _·_
+infixr 5 ƛ_⇒_
 
 private
   variable
-    L M N P Q R : Λ
+    L M N P Q R : Term
     x y z u v w : Name
 
 -- NOTE: Ideally should be implemented using a Multiset.
 -- Alas, Agda does not support Quotient types out of the box and I am not smart enough for Cubical Agda yet.
-Sub : Λ → List Λ
+Sub : Term → List Term
 Sub (var x) = [ var x ]
 Sub (M · N) = M · N ∷ Sub M ++ Sub N
 Sub (ƛ x ⇒ M) = (ƛ x ⇒ M) ∷ Sub M
 
 -- 1.3.5: Subterm
-_⊆_ : Rel Λ zero
+_⊆_ : Rel Term zero
 L ⊆ M = L ∈ Sub M
 
 ∈-add : ∀ {ℓ A} {a : A} {s t : List {ℓ} A} → (a ∈ s ++ t) ⇔ (a ∈ s ⊎ a ∈ t)
@@ -70,5 +71,5 @@ L ⊆ M = L ∈ Sub M
 ⊆-trans {L} {M} {ƛ x ⇒ Q} lm (there mn) = there (⊆-trans lm mn)
 
 -- 1.3.8: Proper subterm
-_⊂_ : Rel Λ zero
+_⊂_ : Rel Term zero
 L ⊂ M = L ≢ M × L ⊆ M
