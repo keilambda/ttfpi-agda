@@ -26,11 +26,6 @@ data Term : Set where
 infixl 7 _·_
 infixr 5 ƛ_⇒_
 
-private
-  variable
-    L M N P Q R : Term
-    x y z u v w : Name
-
 -- NOTE: Ideally should be implemented using a Multiset.
 -- Alas, Agda does not support Quotient types out of the box and I am not smart enough for Cubical Agda yet.
 Sub : Term → List Term
@@ -56,12 +51,12 @@ L ⊆ M = L ∈ Sub M
 ∈-add .from-cong = cong (∈-add .from)
 
 -- 1.3.6: Subterm relation is reflexive and transitive
-⊆-refl : M ⊆ M
+⊆-refl : ∀ {M} → M ⊆ M
 ⊆-refl {var x}   = here refl
 ⊆-refl {M · N}   = here refl
 ⊆-refl {ƛ x ⇒ M} = here refl
 
-⊆-trans : L ⊆ M → M ⊆ N → L ⊆ N
+⊆-trans : ∀ {L M N} → L ⊆ M → M ⊆ N → L ⊆ N
 ⊆-trans {L} {M} {var x} lm (here refl) = lm
 ⊆-trans {L} {M} {P · Q} lm (here refl) = lm
 ⊆-trans {L} {M} {P · Q} lm (there mn) with ∈-add {s = Sub P} {t = Sub Q} .to mn
