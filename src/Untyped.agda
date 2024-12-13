@@ -125,3 +125,13 @@ infix 8 _[_↦_]
 
 data Renaming : Rel Term zero where
   rename : ∀ {x y M} → y ∉ FV M → y binding-∉ M → Renaming (ƛ x ⇒ M) (ƛ y ⇒ M [ x ↦ y ])
+
+-- 1.5.2: α-conversion or α-equivalence; =α
+data _≡α_ : Rel Term zero where
+  α-rename : ∀ {M N} → Renaming M N → M ≡α N
+  α-appl : ∀ {L M N} → M ≡α N → (M · L) ≡α (N · L)
+  α-appr : ∀ {L M N} → M ≡α N → (L · M) ≡α (L · N)
+  α-abst : ∀ {z M N} → M ≡α N → (ƛ z ⇒ M) ≡α (ƛ z ⇒ N)
+  α-refl : ∀ {M} → M ≡α M
+  α-sym : ∀ {M N} → M ≡α N → N ≡α M
+  α-trans : ∀ {L M N} → L ≡α M → M ≡α N → L ≡α N
