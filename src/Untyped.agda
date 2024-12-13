@@ -135,3 +135,22 @@ data _≡α_ : Rel Term zero where
   α-refl : ∀ {M} → M ≡α M
   α-sym : ∀ {M N} → M ≡α N → N ≡α M
   α-trans : ∀ {L M N} → L ≡α M → M ≡α N → L ≡α N
+
+infix 4 _≡α_
+
+-- 1.5.4: α-variant
+AlphaVariant : Rel Term zero
+AlphaVariant = _≡α_
+
+-- 1.6.1: Substitution
+_[_:=_] : Term → Name → Term → Term
+T@(var y) [ x := N ] with x ≟ y
+... | no  _ = T
+... | yes _ = N
+(M · L) [ x := N ] = M [ x := N ] · L [ x := N ]
+T@(ƛ y ⇒ M) [ x := N ] =
+  [ (λ _ → T)
+  , (λ _ → ƛ y ⇒ M [ x := N ])
+  ] (toSum (x ≟ y ⊎-dec y ∈? FV N))
+
+infix 9 _[_:=_]
