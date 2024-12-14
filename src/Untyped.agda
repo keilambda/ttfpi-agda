@@ -1,11 +1,13 @@
 module Untyped where
 
+open import Prelude using (_≟_)
+
 open import Function.Bundles using (_⇔_; Equivalence)
 open import Data.Bool using (if_then_else_)
 open import Data.Empty using (⊥)
 open import Data.List using (List; _∷_; []; [_]; _++_; filter)
 open import Data.List.Relation.Unary.Any using (here; there)
-open import Data.String using (String; _≟_)
+open import Data.String using (String)
 open import Data.Sum using (_⊎_; [_,_]) renaming (inj₁ to inl; inj₂ to inr)
 open import Data.Product using (_×_)
 open import Level using (zero)
