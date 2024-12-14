@@ -1,6 +1,6 @@
 module Untyped where
 
-open import Prelude using (_≟_)
+open import Prelude using (_≟_; ∈-add)
 
 open import Function.Bundles using (_⇔_; Equivalence)
 open import Data.Bool using (if_then_else_)
@@ -43,19 +43,6 @@ Sub (ƛ x ⇒ M) = (ƛ x ⇒ M) ∷ Sub M
 -- 1.3.5: Subterm
 _⊆_ : Rel Term zero
 L ⊆ M = L ∈ Sub M
-
-∈-add : ∀ {ℓ A} {a : A} {s t : List {ℓ} A} → (a ∈ s ++ t) ⇔ (a ∈ s ⊎ a ∈ t)
-∈-add {s = []}     .to x = inr x
-∈-add {s = s ∷ ss} .to (here refl) = inl (here refl)
-∈-add {s = s ∷ ss} .to (there x) with ∈-add {s = ss} .to x
-... | inl q = inl (there q)
-... | inr q = inr q
-∈-add {s = []}     .from (inr x) = x
-∈-add {s = s ∷ ss} .from (inl (here refl)) = here refl
-∈-add {s = s ∷ ss} .from (inl (there x)) = there (∈-add .from (inl x))
-∈-add {s = s ∷ ss} .from (inr x) = there (∈-add .from (inr x))
-∈-add .to-cong   = cong (∈-add .to)
-∈-add .from-cong = cong (∈-add .from)
 
 -- 1.3.6: Subterm relation is reflexive and transitive
 ⊆-refl : ∀ {M} → M ⊆ M
