@@ -1,11 +1,12 @@
 module Prelude where
 
 open import Function.Bundles using (_⇔_; Equivalence)
-open import Data.List using (List; _∷_; []; _++_)
-open import Data.List.Membership.Propositional using (_∈_)
+open import Data.List using (List; _∷_; []; _++_; filter)
+open import Data.List.Membership.Propositional using (_∈_; _∉_)
 open import Data.List.Relation.Unary.Any using (here; there)
 open import Data.String using (String)
 open import Data.Sum using (_⊎_) renaming (inj₁ to inl; inj₂ to inr)
+open import Relation.Nullary using (¬?; ¬_)
 open import Relation.Binary.Definitions using (DecidableEquality)
 open import Relation.Binary.PropositionalEquality using (refl; cong)
 
@@ -35,3 +36,14 @@ instance
 ∈-add {s = s ∷ ss} .from (inr x) = there (∈-add .from (inr x))
 ∈-add .to-cong   = cong (∈-add .to)
 ∈-add .from-cong = cong (∈-add .from)
+
+∉-add : ∀ {ℓ A} {a : A} {s t : List {ℓ} A} → (a ∉ s ++ t) ⇔ (¬ (a ∈ s ⊎ a ∈ t))
+∉-add .to m x   = m (∈-add .from x)
+∉-add .from m x = m (∈-add .to x)
+∉-add .to-cong   = cong (∉-add .to)
+∉-add .from-cong = cong (∉-add .from)
+
+_\\_ : {A : Set} → {{_ : DecidableEq A}} → List A → A → List A
+xs \\ x = filter (λ y → ¬? (x ≟ y)) xs
+
+infix 7 _\\_

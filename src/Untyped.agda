@@ -1,18 +1,17 @@
 module Untyped where
 
-open import Prelude using (_≟_; ∈-add)
+open import Prelude using (_≟_; ∈-add; _\\_)
 
 open import Function.Bundles using (_⇔_; Equivalence)
 open import Data.Bool using (if_then_else_)
 open import Data.Empty using (⊥)
-open import Data.List using (List; _∷_; []; [_]; _++_; filter)
+open import Data.List using (List; _∷_; []; [_]; _++_)
 open import Data.List.Relation.Unary.Any using (here; there)
 open import Data.String using (String)
 open import Data.Sum using (_⊎_; [_,_]) renaming (inj₁ to inl; inj₂ to inr)
 open import Data.Product using (_×_)
 open import Level using (zero)
-open import Relation.Nullary using (Dec; yes; no; ¬?; toSum; _⊎-dec_; ⌊_⌋)
-open import Relation.Nullary.Negation.Core using (¬_)
+open import Relation.Nullary using (Dec; yes; no; ¬_; toSum; _⊎-dec_; ⌊_⌋)
 open import Relation.Binary.Core using (Rel)
 open import Relation.Binary.PropositionalEquality using (_≡_; _≢_; refl; cong)
 
@@ -66,7 +65,7 @@ L ⊂ M = L ≢ M × L ⊆ M
 -- 1.4.1: The set of free variables of a λ-term
 FV : Term → List Name
 FV (var x) = [ x ]
-FV (ƛ x ⇒ M) = filter (λ y → ¬? (x ≟ y)) (FV M)
+FV (ƛ x ⇒ M) = FV M \\ x
 FV (M · N) = FV M ++ FV N
 
 -- 1.4.3: Closed λ-term; combinator; Λ⁰
