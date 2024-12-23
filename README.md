@@ -6,6 +6,7 @@ Formalization of the book "Type Theory and Formal Proof: An Introduction" in Agd
 
 1. [Untyped Lambda Calculus](./src/Untyped.agda)
 2. [Simply Typed Lambda Calculus](./src/STLC.agda) ($\lambda ^ \to$)
+3. [Second-order Typed Lambda Calculus](./src/SystemF.agda) ($\lambda 2$)
 
 > [!CAUTION]
 > Be sure to review the book's [errata][errata] (page 51).
