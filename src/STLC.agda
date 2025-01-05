@@ -1,6 +1,8 @@
 module STLC where
 
-open import Data.String using (String) renaming (_≟_ to _s≟_)
+open import Prelude using (DecidableEq; _≟_)
+
+open import Data.String using (String)
 open import Data.List using (List; [_]; _++_; filter)
 open import Data.Product.Base using (_×_; _,_; ∃; ∃-syntax; proj₂)
 open import Function.Base using (case_of_)
@@ -48,7 +50,7 @@ data Term : Set where
 
 FV : Term → List Name
 FV (` x) = [ x ]
-FV (ƛ x ∶ A ⇒ M) = filter (λ y → ¬? (x s≟ y)) (FV M)
+FV (ƛ x ∶ A ⇒ M) = filter (λ y → ¬? (x ≟ y)) (FV M)
 FV (M · N) = FV M ++ FV N
 
 infixl 5 _,_∶_
@@ -106,18 +108,20 @@ data _⊢_∶_ : Context → Term → Type → Set where
 ƛ-gen .to-cong = cong (ƛ-gen .to)
 ƛ-gen .from-cong = cong (ƛ-gen .from)
 
-infix 4 _≟_
-
-_≟_ : DecidableEquality Type
-(`` x) ≟ (`` y) with x s≟ y
+Type-deq : DecidableEquality Type
+Type-deq (`` x) (`` y) with x ≟ y
 ... | yes refl = yes refl
 ... | no n     = no λ{refl → n refl}
-(`` x) ≟ (A ⇒ B) = no λ()
-(A ⇒ B) ≟ (`` x) = no λ()
-(A ⇒ B) ≟ (A’ ⇒ B’) with A ≟ A’ | B ≟ B’
+Type-deq (`` x) (A ⇒ B) = no λ()
+Type-deq (A ⇒ B) (`` x) = no λ()
+Type-deq (A ⇒ B) (A’ ⇒ B’) with Type-deq A A’ | Type-deq B B’
 ... | no na    | _        = no λ{refl → na refl}
 ... | yes _    | no nb    = no λ{refl → nb refl}
 ... | yes refl | yes refl = yes refl
+
+instance
+  DecidableEq-Type : DecidableEq Type
+  DecidableEq-Type = record { _≟_ = Type-deq }
 
 uniq-∋ : ∀ {Γ x A B} → Γ ∋ x ∶ A → Γ ∋ x ∶ B → A ≡ B
 uniq-∋ here here               = refl
@@ -139,7 +143,7 @@ ext-∋ _  ¬∃ (A , there _ ∋x) = ¬∃ (A , ∋x)
 
 lookup : ∀ Γ x → Dec (∃[ A ] Γ ∋ x ∶ A)
 lookup ∅ x = no λ()
-lookup (Γ , y ∶ B) x with x s≟ y
+lookup (Γ , y ∶ B) x with x ≟ y
 ... | yes refl = yes (B , here)
 ... | no nx with lookup Γ x
 ...   | yes (A , x) = yes (A , there nx x)
