@@ -37,7 +37,11 @@ jobs:
           rm -rf site
           mkdir site
           cp -r html css site/
+          printf '%s' '<!doctype html><meta charset="utf-8"><meta http-equiv="refresh" content="0; url=html/README.html"><link rel="canonical" href="html/README.html">' > site/index.html
       - uses: actions/upload-pages-artifact@v4
         with:
           path: site
+          name: site
       - uses: actions/deploy-pages@v4
+        with:
+          artifact_name: site
